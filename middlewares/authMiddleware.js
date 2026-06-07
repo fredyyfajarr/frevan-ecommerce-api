@@ -3,12 +3,16 @@ import User from '../models/userModel.js';
 import asyncHandler from './asyncHandler.js';
 
 export const protectedMiddleware = asyncHandler(async (req, res, next) => {
-  let token = req.cookies?.jwt; // Pastikan cookie ada sebelum diakses
-  console.log('Token:', token); // Debugging
+  let token = req.cookies?.jwt;
+  const authHeader = req.headers.authorization;
+
+  if (!token && authHeader?.startsWith('Bearer ')) {
+    token = authHeader.split(' ')[1];
+  }
 
   if (!token) {
     res.status(401);
-    return res.json({ message: 'Not Authorized, no token' });
+    throw new Error('Not Authorized, no token');
   }
 
   try {
@@ -17,13 +21,13 @@ export const protectedMiddleware = asyncHandler(async (req, res, next) => {
 
     if (!req.user) {
       res.status(401);
-      return res.json({ message: 'Not Authorized, user not found' });
+      throw new Error('Not Authorized, user not found');
     }
 
     next();
   } catch (error) {
     res.status(401);
-    return res.json({ message: 'Not Authorized, token failed' });
+    throw new Error('Not Authorized, token failed');
   }
 });
 

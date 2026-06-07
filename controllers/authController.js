@@ -27,6 +27,7 @@ const createSendResToken = (user, statusCode, res) => {
 
   res.status(statusCode).json({
     data: user,
+    token,
   });
 };
 
