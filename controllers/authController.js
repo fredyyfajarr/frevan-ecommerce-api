@@ -30,6 +30,13 @@ const createSendResToken = (user, statusCode, res) => {
   });
 };
 
+const ensureOwnProfile = (req, res) => {
+  if (req.params.id !== req.user._id.toString()) {
+    res.status(403);
+    throw new Error('Not authorized to update this profile');
+  }
+};
+
 export const registerUser = asyncHandler(async (req, res) => {
   const isOwner = (await User.countDocuments()) === 0;
 
@@ -126,6 +133,8 @@ export const deleteOldImage = async (imageUrl) => {
 };
 
 export const updateUser = asyncHandler(async (req, res) => {
+  ensureOwnProfile(req, res);
+
   const paramsId = req.params.id;
   let updateFields = { ...req.body };
 
@@ -160,6 +169,8 @@ export const updateUser = asyncHandler(async (req, res) => {
 });
 
 export const updatePasswordUser = asyncHandler(async (req, res) => {
+  ensureOwnProfile(req, res);
+
   const { oldPassword, newPassword } = req.body;
   const user = await User.findById(req.params.id);
 

@@ -21,13 +21,13 @@ router.post('/', protectedMiddleware, createOrder);
 // only accesed by user role owner
 router.get('/', protectedMiddleware, ownerMiddleware, allOrder);
 
-// post /api/v1/order/:id
-// only accesed by user role owner
-router.get('/:id', protectedMiddleware, ownerMiddleware, detailOrder);
-
 // get /api/v1/order/current/user
 // only accesed by user auth
 router.get('/current/user', protectedMiddleware, currentUserOrder);
+
+// post /api/v1/order/:id
+// only accesed by user role owner
+router.get('/:id', protectedMiddleware, ownerMiddleware, detailOrder);
 
 // post /api/v1/order/callback/midtrans
 router.post('/callback/midtrans', callbackPayment);

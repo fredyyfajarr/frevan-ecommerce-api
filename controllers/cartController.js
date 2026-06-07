@@ -20,6 +20,24 @@ const getCart = asyncHandler(async (req, res) => {
   res.status(200).json(cart);
 });
 
+// @desc Clear current user's cart
+// @route DELETE /api/v1/cart
+// @access Private
+const clearCart = asyncHandler(async (req, res) => {
+  const userId = req.user._id;
+
+  await Cart.findOneAndDelete({ user: userId });
+
+  res.status(200).json({
+    message: 'Cart cleared',
+    cart: {
+      user: userId,
+      items: [],
+      totalPrice: 0,
+    },
+  });
+});
+
 // @desc Add or update cart
 // @route POST /api/v1/cart
 // @access Private
@@ -27,21 +45,45 @@ const createCart = asyncHandler(async (req, res) => {
   const { items } = req.body;
   const userId = req.user._id;
 
+  if (!Array.isArray(items) || items.length < 1) {
+    return res.status(400).json({ message: 'Cart items are required' });
+  }
+
   let cart = await Cart.findOne({ user: userId });
 
   if (!cart) {
-    cart = new Cart({ user: userId, items });
-  } else {
-    items.forEach((newItem) => {
-      const existingItem = cart.items.find(
-        (item) => item.product.toString() === newItem.product
-      );
-      if (existingItem) {
-        existingItem.quantity += newItem.quantity;
-      } else {
-        cart.items.push(newItem);
-      }
-    });
+    cart = new Cart({ user: userId, items: [] });
+  }
+
+  for (const newItem of items) {
+    const product = await Product.findById(newItem.product);
+    if (!product) {
+      return res.status(404).json({ message: 'Product not found' });
+    }
+
+    const quantity = Number(newItem.quantity);
+    if (!Number.isFinite(quantity) || quantity < 1) {
+      return res.status(400).json({ message: 'Quantity must be at least 1' });
+    }
+
+    const existingItem = cart.items.find(
+      (item) => item.product.toString() === product._id.toString()
+    );
+    const nextQuantity = (existingItem?.quantity || 0) + quantity;
+    if (nextQuantity > product.stock) {
+      return res.status(400).json({ message: 'Quantity exceeds product stock' });
+    }
+
+    if (existingItem) {
+      existingItem.quantity = nextQuantity;
+      existingItem.price = product.price;
+    } else {
+      cart.items.push({
+        product: product._id,
+        quantity,
+        price: product.price,
+      });
+    }
   }
 
   cart.totalPrice = cart.items.reduce(
@@ -66,6 +108,11 @@ const deleteCart = asyncHandler(async (req, res) => {
     return res.status(404).json({ message: 'Cart not found' });
   }
 
+  const itemExists = cart.items.some((item) => item._id.toString() === cartId);
+  if (!itemExists) {
+    return res.status(404).json({ message: 'Item not found in cart' });
+  }
+
   // Filter item yang tidak dihapus
   cart.items = cart.items.filter((item) => item._id.toString() !== cartId);
 
@@ -87,39 +134,34 @@ const updateCart = asyncHandler(async (req, res) => {
   const cartId = req.params.cartId;
   const { quantity } = req.body;
 
-  console.log(`User ID: ${userId}, Cart ID: ${cartId}, Quantity: ${quantity}`);
+  if (!Number.isFinite(Number(quantity))) {
+    return res.status(400).json({ message: 'Quantity must be a number' });
+  }
 
   let cart = await Cart.findOne({ user: userId });
 
   if (!cart) {
-    console.log('Cart not found');
     return res.status(404).json({ message: 'Cart not found' });
   }
-
-  console.log(
-    'Cart items:',
-    cart.items.map((item) => item._id.toString())
-  );
 
   const itemIndex = cart.items.findIndex(
     (item) => item._id.toString() === cartId
   );
 
   if (itemIndex === -1) {
-    console.log('Item not found in cart');
     return res.status(404).json({ message: 'Item not found in cart' });
   }
 
-  console.log('Found item:', cart.items[itemIndex]);
-
   if (quantity <= 0) {
-    console.log('Removing item from cart');
     cart.items.splice(itemIndex, 1);
   } else {
     const product = await Product.findById(cart.items[itemIndex].product);
     if (!product) {
-      console.log('Product not found');
       return res.status(404).json({ message: 'Product not found' });
+    }
+
+    if (quantity > product.stock) {
+      return res.status(400).json({ message: 'Quantity exceeds product stock' });
     }
 
     cart.items[itemIndex].quantity = quantity;
@@ -132,8 +174,7 @@ const updateCart = asyncHandler(async (req, res) => {
   );
 
   await cart.save();
-  console.log('Cart updated successfully');
   res.status(200).json(cart);
 });
 
-export { getCart, createCart, deleteCart, updateCart };
+export { getCart, createCart, clearCart, deleteCart, updateCart };
