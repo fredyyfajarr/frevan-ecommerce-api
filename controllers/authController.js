@@ -12,13 +12,13 @@ const signToken = (id) => {
 
 const createSendResToken = (user, statusCode, res) => {
   const token = signToken(user._id);
-
-  const isDev = process.env.NODE_ENV === 'development' ? false : true;
+  const isProduction = process.env.NODE_ENV === 'production';
 
   const cookieOption = {
-    expire: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
+    expires: new Date(Date.now() + 6 * 24 * 60 * 60 * 1000),
     httpOnly: true,
-    security: isDev,
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
   };
 
   res.cookie('jwt', token, cookieOption);
@@ -181,9 +181,13 @@ export const updatePasswordUser = asyncHandler(async (req, res) => {
 });
 
 export const logoutUser = async (req, res) => {
+  const isProduction = process.env.NODE_ENV === 'production';
+
   res.cookie('jwt', '', {
     httpOnly: true,
-    expires: new Date(Date.now()),
+    expires: new Date(0),
+    secure: isProduction,
+    sameSite: isProduction ? 'none' : 'lax',
   });
 
   res.status(200).json({
