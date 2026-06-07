@@ -4,6 +4,8 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
+    "seed": "node scripts/seed.js",
+    "seed:reset": "node scripts/seed.js --reset",
     "test": "echo \"Error: no test specified\" && exit 1",
     "dev": "npx nodemon app.js"
   },
