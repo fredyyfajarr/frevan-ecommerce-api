@@ -1,4 +1,4 @@
-﻿# Frevan E-Commerce API
+# Frevan E-Commerce API
 
 The backend REST API for the Frevan E-Commerce platform.
 
@@ -16,4 +16,5 @@ The backend REST API for the Frevan E-Commerce platform.
 - Midtrans Client
 - Cloudinary
 
-Copyright build dari nama saya Fredy Fajar Adi Putra
+Copyright &copy; 2026 Fredy Fajar Adi Putra. All Rights Reserved.
+
