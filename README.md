@@ -1,16 +1,19 @@
-# frevan-ecommerce-api
+﻿# Frevan E-Commerce API
 
-## Brief Description
-frevan-ecommerce-api is a dynamic application project.
+The backend REST API for the Frevan E-Commerce platform.
 
 ## Key Features
-- Modern application architecture
-- Scalable and maintainable codebase
-- Seamless developer experience
+- User authentication (JWT)
+- Product and category management
+- Order processing
+- Midtrans payment gateway integration
+- Cloudinary image upload
 
 ## Tech Stack
-- Express.js
-- MongoDB (Mongoose)
 - Node.js
+- Express
+- MongoDB (Mongoose)
+- Midtrans Client
+- Cloudinary
 
 Copyright build dari nama saya Fredy Fajar Adi Putra
